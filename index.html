@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Formatwerk — Social Asset Generator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+  :root {
+    --bg-0: #09090b;
+    --bg-1: #111113;
+    --bg-2: #18181b;
+    --bg-3: #1f1f23;
+    --bg-4: #27272a;
+    --border: #2a2a2e;
+    --border-hover: #3f3f46;
+    --text-0: #fafafa;
+    --text-1: #d4d4d8;
+    --text-2: #a1a1aa;
+    --text-3: #71717a;
+    --text-4: #52525b;
+    --accent: #e4e4e7;
+    --accent-hover: #f4f4f5;
+    --accent-subtle: rgba(228,228,231,0.08);
+    --mono: 'JetBrains Mono', monospace;
+    --sans: 'Inter', -apple-system, system-ui, sans-serif;
+    --radius: 6px;
+    --radius-lg: 10px;
+  }
+
+  html, body, #root { height:100%; background:var(--bg-0); color:var(--text-1); font-family:var(--sans); -webkit-font-smoothing:antialiased; }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width:6px; }
+  ::-webkit-scrollbar-track { background:transparent; }
+  ::-webkit-scrollbar-thumb { background:var(--bg-4); border-radius:3px; }
+
+  /* Focus */
+  :focus-visible { outline:1px solid var(--text-4); outline-offset:2px; }
+
+  /* Utility */
+  .mono { font-family:var(--mono); }
+
+  /* ── Layout ─────────────────────────────────── */
+  .app { display:flex; flex-direction:column; height:100vh; overflow:hidden; }
+
+  .header {
+    display:flex; align-items:center; justify-content:space-between;
+    padding:16px 24px;
+    border-bottom:1px solid var(--border);
+    background:var(--bg-1);
+  }
+  .header h1 { font-size:14px; font-weight:600; letter-spacing:-0.02em; color:var(--text-0); }
+  .header .sub { font-size:11px; font-weight:400; color:var(--text-4); margin-top:2px; font-family:var(--mono); letter-spacing:0.02em; text-transform:uppercase; }
+
+  .body { display:flex; flex:1; overflow:hidden; }
+
+  /* ── Sidebar ────────────────────────────────── */
+  .sidebar {
+    width:320px; min-width:320px;
+    border-right:1px solid var(--border);
+    display:flex; flex-direction:column;
+    background:var(--bg-1);
+    overflow:hidden;
+  }
+
+  .tabs {
+    display:flex; border-bottom:1px solid var(--border);
+  }
+  .tabs button {
+    flex:1; padding:12px 0;
+    font-size:10px; font-weight:600; letter-spacing:0.08em; text-transform:uppercase;
+    background:none; border:none; color:var(--text-4); cursor:pointer;
+    transition:color 0.15s;
+    font-family:var(--mono);
+  }
+  .tabs button:hover { color:var(--text-2); }
+  .tabs button.active { color:var(--text-0); box-shadow:inset 0 -1px 0 var(--text-0); }
+
+  .panel { flex:1; overflow-y:auto; padding:20px; }
+
+  .section { margin-bottom:24px; }
+  .section-title {
+    font-size:10px; font-weight:600; letter-spacing:0.08em; text-transform:uppercase;
+    color:var(--text-4); margin-bottom:10px;
+    font-family:var(--mono);
+  }
+
+  /* ── Form Elements ──────────────────────────── */
+  .upload-zone {
+    border:1px dashed var(--border);
+    border-radius:var(--radius);
+    padding:24px 16px;
+    text-align:center;
+    font-size:12px; color:var(--text-3);
+    cursor:pointer;
+    transition:all 0.15s;
+    background:transparent;
+    width:100%;
+    font-family:var(--sans);
+  }
+  .upload-zone:hover { border-color:var(--text-4); color:var(--text-2); background:var(--accent-subtle); }
+
+  .field { margin-bottom:10px; }
+  .field-label { font-size:11px; color:var(--text-3); margin-bottom:5px; display:flex; justify-content:space-between; }
+  .field-label .val { font-family:var(--mono); font-size:10px; color:var(--text-4); }
+
+  input[type="range"] {
+    -webkit-appearance:none; width:100%; height:4px;
+    background:var(--bg-4); border-radius:2px; outline:none;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance:none; width:14px; height:14px;
+    background:var(--text-0); border-radius:50%; cursor:pointer;
+    border:2px solid var(--bg-0);
+  }
+
+  input[type="color"] {
+    -webkit-appearance:none; border:1px solid var(--border); border-radius:var(--radius);
+    width:32px; height:32px; cursor:pointer; background:transparent; padding:2px;
+  }
+  input[type="color"]::-webkit-color-swatch-wrapper { padding:0; }
+  input[type="color"]::-webkit-color-swatch { border:none; border-radius:3px; }
+
+  input[type="text"], textarea {
+    width:100%; background:var(--bg-2); border:1px solid var(--border);
+    border-radius:var(--radius); padding:8px 10px;
+    font-size:12px; color:var(--text-1); font-family:var(--sans);
+    transition:border-color 0.15s;
+    resize:none;
+  }
+  input[type="text"]:focus, textarea:focus { border-color:var(--text-4); outline:none; }
+
+  input[type="checkbox"] {
+    -webkit-appearance:none; width:14px; height:14px;
+    border:1px solid var(--border); border-radius:3px; background:var(--bg-2);
+    cursor:pointer; position:relative; flex-shrink:0;
+  }
+  input[type="checkbox"]:checked { background:var(--text-0); border-color:var(--text-0); }
+  input[type="checkbox"]:checked::after {
+    content:''; position:absolute; left:4px; top:1px;
+    width:4px; height:8px;
+    border:solid var(--bg-0); border-width:0 1.5px 1.5px 0;
+    transform:rotate(45deg);
+  }
+
+  /* ── Buttons ────────────────────────────────── */
+  .btn {
+    padding:7px 14px; border-radius:var(--radius); font-size:11px; font-weight:500;
+    border:1px solid var(--border); background:var(--bg-2); color:var(--text-2);
+    cursor:pointer; transition:all 0.15s; font-family:var(--sans);
+  }
+  .btn:hover { border-color:var(--border-hover); color:var(--text-1); background:var(--bg-3); }
+  .btn.active { background:var(--text-0); color:var(--bg-0); border-color:var(--text-0); }
+
+  .btn-primary {
+    padding:10px 20px; border-radius:var(--radius); font-size:12px; font-weight:600;
+    border:none; background:var(--text-0); color:var(--bg-0);
+    cursor:pointer; transition:all 0.15s; font-family:var(--sans);
+    letter-spacing:-0.01em;
+  }
+  .btn-primary:hover { background:var(--accent-hover); }
+  .btn-primary:disabled { opacity:0.4; cursor:default; }
+
+  .btn-ghost {
+    background:none; border:none; color:var(--text-3); font-size:11px;
+    cursor:pointer; padding:4px 0; font-family:var(--mono);
+    transition:color 0.15s;
+  }
+  .btn-ghost:hover { color:var(--text-1); }
+  .btn-ghost.danger:hover { color:#ef4444; }
+
+  .pill {
+    padding:5px 12px; border-radius:20px; font-size:11px; font-weight:500;
+    border:1px solid var(--border); background:transparent; color:var(--text-3);
+    cursor:pointer; transition:all 0.15s; font-family:var(--sans);
+  }
+  .pill:hover { border-color:var(--border-hover); color:var(--text-2); }
+  .pill.active { background:var(--text-0); color:var(--bg-0); border-color:var(--text-0); }
+
+  /* ── Format Cards ───────────────────────────── */
+  .format-card {
+    display:flex; align-items:center; gap:12px;
+    padding:12px; border-radius:var(--radius);
+    border:1px solid var(--border); background:transparent;
+    cursor:pointer; transition:all 0.15s;
+    margin-bottom:6px;
+  }
+  .format-card:hover { border-color:var(--border-hover); background:var(--accent-subtle); }
+  .format-card.selected { border-color:var(--text-3); background:var(--accent-subtle); }
+  .format-card .info { flex:1; }
+  .format-card .name { font-size:12px; font-weight:500; color:var(--text-1); }
+  .format-card .dims { font-size:10px; color:var(--text-4); font-family:var(--mono); margin-top:2px; }
+
+  /* ── Overlay Grid ───────────────────────────── */
+  .overlay-grid { display:grid; grid-template-columns:1fr 1fr; gap:4px; }
+  .overlay-btn {
+    padding:8px; border-radius:var(--radius); font-size:10px; font-weight:500;
+    background:var(--bg-2); border:1px solid var(--border); color:var(--text-3);
+    cursor:pointer; transition:all 0.15s; font-family:var(--sans);
+  }
+  .overlay-btn:hover { border-color:var(--border-hover); color:var(--text-2); }
+  .overlay-btn.active { background:var(--text-0); color:var(--bg-0); border-color:var(--text-0); }
+
+  /* ── Style Toggle Row ───────────────────────── */
+  .toggle-row { display:flex; gap:4px; flex-wrap:wrap; }
+
+  /* ── Export Card ────────────────────────────── */
+  .export-card {
+    display:flex; align-items:center; justify-content:space-between;
+    padding:12px; border-radius:var(--radius);
+    border:1px solid var(--border); background:var(--bg-2);
+    margin-bottom:6px;
+  }
+  .export-card .name { font-size:12px; font-weight:500; color:var(--text-1); }
+  .export-card .dims { font-size:10px; color:var(--text-4); font-family:var(--mono); }
+
+  /* ── Canvas Area ────────────────────────────── */
+  .canvas-area {
+    flex:1; display:flex; flex-direction:column;
+    align-items:center; justify-content:center;
+    padding:32px; background:var(--bg-0); overflow:auto;
+  }
+  .canvas-meta { font-size:10px; color:var(--text-4); font-family:var(--mono); margin-bottom:12px; letter-spacing:0.04em; }
+  .canvas-wrap {
+    border:1px solid var(--border); border-radius:var(--radius-lg);
+    overflow:hidden;
+    box-shadow:0 0 0 1px rgba(0,0,0,0.5), 0 24px 48px rgba(0,0,0,0.4);
+  }
+  .canvas-wrap canvas {
+    display:block;
+    max-height:calc(100vh - 220px);
+    max-width:100%;
+    object-fit:contain;
+  }
+  .format-pills { display:flex; gap:6px; margin-bottom:16px; flex-wrap:wrap; justify-content:center; }
+
+  /* ── Inline Row ─────────────────────────────── */
+  .inline-row { display:flex; align-items:center; gap:8px; }
+  .inline-row.spread { justify-content:space-between; }
+
+  /* ── Image Preview ──────────────────────────── */
+  .img-preview {
+    width:100%; height:80px; object-fit:cover; border-radius:var(--radius);
+    opacity:0.6; margin-top:8px; border:1px solid var(--border);
+  }
+
+  /* Checkbox row */
+  .check-row { display:flex; align-items:center; gap:8px; margin-bottom:6px; }
+  .check-row span { font-size:11px; color:var(--text-3); }
+
+  /* Responsive */
+  @media (max-width:768px) {
+    .body { flex-direction:column; }
+    .sidebar { width:100%; min-width:auto; max-height:50vh; border-right:none; border-bottom:1px solid var(--border); }
+    .canvas-area { padding:16px; }
+  }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
+
+<script type="text/babel">
+const { useState, useRef, useEffect, useCallback } = React;
+
+// ── Presets ──────────────────────────────────────────────────────────────────
+const PRESETS = [
+  { id:"feed",      label:"Feed Post",       w:1080, h:1350, ratio:"4:5"     },
+  { id:"story",     label:"Story / Reel",     w:1080, h:1920, ratio:"9:16"    },
+  { id:"square",    label:"Square",           w:1080, h:1080, ratio:"1:1"     },
+  { id:"landscape", label:"Landscape",        w:1200, h:628,  ratio:"1.91:1"  },
+  { id:"twitter",   label:"X / Twitter",      w:1600, h:900,  ratio:"16:9"    },
+  { id:"pinterest", label:"Pinterest Pin",    w:1000, h:1500, ratio:"2:3"     },
+  { id:"yt_thumb",  label:"YT Thumbnail",     w:1280, h:720,  ratio:"16:9"    },
+  { id:"fb_cover",  label:"FB Cover",         w:820,  h:312,  ratio:"2.63:1"  },
+];
+
+const OVERLAYS = [
+  { label:"None",        value:"none"           },
+  { label:"Vignette",    value:"dark-vignette"  },
+  { label:"Soft Light",  value:"light-fade"     },
+  { label:"Bottom Grad", value:"bottom-gradient"},
+  { label:"Top Grad",    value:"top-gradient"   },
+  { label:"Darken",      value:"full-darken"    },
+  { label:"Duotone",     value:"duotone"        },
+];
+
+const makeTextLayer = (idx = 0) => ({
+  id: Date.now() + Math.random(),
+  text:"Your Text Here",
+  fontSize:64,
+  color:"#ffffff",
+  xPct:50, yPct: 45 + idx * 18,
+  bold:true, italic:false,
+  align:"center",
+  shadowEnabled:true, shadowColor:"#000000", shadowBlur:8,
+  letterSpacing:0, lineHeight:1.2, maxWidthPct:85,
+  bgEnabled:false, bgColor:"#000000", bgOpacity:50,
+});
+
+// ── Drawing engine ───────────────────────────────────────────────────────────
+function drawCanvas(canvas, preset, img, imgPos, textLayers, overlay, bgColor, fontName) {
+  const ctx = canvas.getContext("2d");
+  canvas.width = preset.w;
+  canvas.height = preset.h;
+
+  ctx.fillStyle = bgColor;
+  ctx.fillRect(0, 0, preset.w, preset.h);
+
+  if (img) {
+    const ir = img.width / img.height;
+    const cr = preset.w / preset.h;
+    let sw, sh, sx, sy;
+    if (ir > cr) {
+      sh = img.height; sw = img.height * cr;
+      sx = (img.width - sw) / 2 + (imgPos.x / 100) * ((img.width - sw) / 2);
+      sy = (img.height - sh) / 2 + (imgPos.y / 100) * ((img.height - sh) / 2);
+    } else {
+      sw = img.width; sh = img.width / cr;
+      sx = (img.width - sw) / 2 + (imgPos.x / 100) * ((img.width - sw) / 2);
+      sy = (img.height - sh) / 2 + (imgPos.y / 100) * ((img.height - sh) / 2);
+    }
+    ctx.drawImage(img, sx, sy, sw, sh, 0, 0, preset.w, preset.h);
+  }
+
+  applyOverlay(ctx, preset.w, preset.h, overlay);
+  textLayers.forEach(l => drawText(ctx, l, preset.w, preset.h, fontName));
+}
+
+function applyOverlay(ctx, w, h, ov) {
+  if (ov === "none") return;
+  let grad;
+  switch(ov) {
+    case "dark-vignette":
+      grad = ctx.createRadialGradient(w/2,h/2,w*0.2, w/2,h/2,w*0.8);
+      grad.addColorStop(0,"rgba(0,0,0,0)"); grad.addColorStop(1,"rgba(0,0,0,0.55)");
+      ctx.fillStyle = grad; ctx.fillRect(0,0,w,h); break;
+    case "light-fade":
+      ctx.fillStyle="rgba(255,255,255,0.2)"; ctx.fillRect(0,0,w,h); break;
+    case "bottom-gradient":
+      grad=ctx.createLinearGradient(0,h*0.45,0,h);
+      grad.addColorStop(0,"rgba(0,0,0,0)"); grad.addColorStop(1,"rgba(0,0,0,0.65)");
+      ctx.fillStyle=grad; ctx.fillRect(0,0,w,h); break;
+    case "top-gradient":
+      grad=ctx.createLinearGradient(0,0,0,h*0.5);
+      grad.addColorStop(0,"rgba(0,0,0,0.65)"); grad.addColorStop(1,"rgba(0,0,0,0)");
+      ctx.fillStyle=grad; ctx.fillRect(0,0,w,h); break;
+    case "full-darken":
+      ctx.fillStyle="rgba(0,0,0,0.4)"; ctx.fillRect(0,0,w,h); break;
+    case "duotone":
+      ctx.globalCompositeOperation="color";
+      ctx.fillStyle="rgba(100,50,200,0.45)"; ctx.fillRect(0,0,w,h);
+      ctx.globalCompositeOperation="source-over"; break;
+  }
+}
+
+function wrapText(ctx, text, maxW) {
+  const paras = text.split("\n");
+  const lines = [];
+  paras.forEach(p => {
+    const words = p.split(" ");
+    let cur = "";
+    words.forEach(w => {
+      const t = cur ? cur + " " + w : w;
+      if (ctx.measureText(t).width > maxW && cur) { lines.push(cur); cur = w; }
+      else cur = t;
+    });
+    if (cur) lines.push(cur);
+  });
+  return lines.length ? lines : [""];
+}
+
+function drawText(ctx, L, w, h, fontName) {
+  const ff = fontName || "Inter, sans-serif";
+  const style = `${L.italic?"italic ":""}${L.bold?"700 ":"400 "}`;
+  const fs = (L.fontSize / 1080) * Math.min(w, h);
+  ctx.font = `${style}${fs}px "${ff}", sans-serif`;
+  ctx.fillStyle = L.color;
+  ctx.textAlign = L.align;
+  ctx.textBaseline = "middle";
+
+  if (L.shadowEnabled) {
+    ctx.shadowColor = L.shadowColor; ctx.shadowBlur = L.shadowBlur;
+    ctx.shadowOffsetX = 2; ctx.shadowOffsetY = 2;
+  } else {
+    ctx.shadowColor = "transparent"; ctx.shadowBlur = 0;
+    ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 0;
+  }
+
+  const x = (L.xPct/100)*w, y = (L.yPct/100)*h;
+  const maxW = (L.maxWidthPct/100)*w;
+  const lines = wrapText(ctx, L.text, maxW);
+  const lh = fs * L.lineHeight;
+  const totalH = lines.length * lh;
+  const startY = y - totalH/2 + lh/2;
+
+  if (L.bgEnabled) {
+    ctx.shadowColor="transparent"; ctx.shadowBlur=0;
+    const pad = fs*0.35;
+    let mw=0;
+    lines.forEach(l => { const m=ctx.measureText(l).width; if(m>mw) mw=m; });
+    const bx = L.align==="center" ? x-mw/2-pad : L.align==="left" ? x-pad : x-mw-pad;
+    const by = startY - lh/2 - pad;
+    const op = Math.round(L.bgOpacity*2.55).toString(16).padStart(2,"0");
+    ctx.fillStyle = L.bgColor + op;
+    ctx.beginPath();
+    if (ctx.roundRect) ctx.roundRect(bx, by, mw+pad*2, totalH+pad*2, fs*0.12);
+    else ctx.rect(bx, by, mw+pad*2, totalH+pad*2);
+    ctx.fill();
+    ctx.fillStyle = L.color;
+    if (L.shadowEnabled) { ctx.shadowColor=L.shadowColor; ctx.shadowBlur=L.shadowBlur; ctx.shadowOffsetX=2; ctx.shadowOffsetY=2; }
+  }
+
+  lines.forEach((line, i) => {
+    const ly = startY + i*lh;
+    if (L.letterSpacing > 0) {
+      const tw = ctx.measureText(line).width + L.letterSpacing*(line.length-1);
+      let sx = L.align==="center" ? x-tw/2 : L.align==="right" ? x-tw : x;
+      const prevAlign = ctx.textAlign; ctx.textAlign = "left";
+      for (let c=0;c<line.length;c++) {
+        ctx.fillText(line[c], sx, ly);
+        sx += ctx.measureText(line[c]).width + L.letterSpacing;
+      }
+      ctx.textAlign = prevAlign;
+    } else {
+      ctx.fillText(line, x, ly);
+    }
+  });
+  ctx.shadowColor="transparent"; ctx.shadowBlur=0; ctx.shadowOffsetX=0; ctx.shadowOffsetY=0;
+}
+
+// ── Main Component ───────────────────────────────────────────────────────────
+function App() {
+  const [image, setImage] = useState(null);
+  const [imgObj, setImgObj] = useState(null);
+  const [imgPos, setImgPos] = useState({x:0,y:0});
+  const [fontName, setFontName] = useState("");
+  const [fontLoaded, setFontLoaded] = useState(false);
+  const [layers, setLayers] = useState([makeTextLayer(0)]);
+  const [selected, setSelected] = useState(["feed","story"]);
+  const [preview, setPreview] = useState("feed");
+  const [overlay, setOverlay] = useState("none");
+  const [bgColor, setBgColor] = useState("#0a0a0b");
+  const [exporting, setExporting] = useState(false);
+  const [activeLayer, setActiveLayer] = useState(0);
+  const [tab, setTab] = useState("image");
+
+  const canvasRef = useRef(null);
+  const fileRef = useRef(null);
+  const fontRef = useRef(null);
+
+  const handleImage = e => {
+    const f = e.target.files[0]; if(!f) return;
+    const url = URL.createObjectURL(f);
+    setImage(url);
+    const img = new Image();
+    img.onload = () => setImgObj(img);
+    img.src = url;
+  };
+
+  const handleFont = async e => {
+    const f = e.target.files[0]; if(!f) return;
+    const buf = await f.arrayBuffer();
+    const name = f.name.replace(/\.[^.]+$/,"").replace(/[^a-zA-Z0-9]/g,"");
+    const font = new FontFace(name, buf);
+    await font.load();
+    document.fonts.add(font);
+    setFontName(name);
+    setFontLoaded(true);
+  };
+
+  const redraw = useCallback(() => {
+    const c = canvasRef.current; if(!c) return;
+    const p = PRESETS.find(x=>x.id===preview); if(!p) return;
+    drawCanvas(c, p, imgObj, imgPos, layers, overlay, bgColor, fontName||null);
+  }, [imgObj, imgPos, layers, preview, overlay, bgColor, fontName]);
+
+  useEffect(() => { redraw(); }, [redraw]);
+
+  const updateLayer = (i,k,v) => setLayers(p => { const c=[...p]; c[i]={...c[i],[k]:v}; return c; });
+  const addLayer = () => { setLayers(p=>[...p, makeTextLayer(p.length)]); setActiveLayer(layers.length); };
+  const removeLayer = i => { if(layers.length<=1) return; setLayers(p=>p.filter((_,j)=>j!==i)); setActiveLayer(Math.max(0,i-1)); };
+  const toggleFmt = id => setSelected(p=> p.includes(id)?p.filter(x=>x!==id):[...p,id]);
+
+  const exportOne = pid => {
+    const p=PRESETS.find(x=>x.id===pid);
+    const c=document.createElement("canvas");
+    drawCanvas(c,p,imgObj,imgPos,layers,overlay,bgColor,fontName||null);
+    c.toBlob(b=>{
+      const a=document.createElement("a");
+      a.href=URL.createObjectURL(b);
+      a.download=`${p.label.replace(/\s+/g,"_")}_${p.w}x${p.h}.png`;
+      a.click();
+    },"image/png");
+  };
+
+  const exportAll = async () => {
+    setExporting(true);
+    for (const id of selected) { exportOne(id); await new Promise(r=>setTimeout(r,350)); }
+    setExporting(false);
+  };
+
+  const L = layers[activeLayer] || layers[0];
+  const presetObj = PRESETS.find(p=>p.id===preview);
+
+  // ── Render ───────────────────────────────────────────────────────────────
+  return (
+    <div className="app">
+      {/* Header */}
+      <header className="header">
+        <div>
+          <h1>Formatwerk</h1>
+          <div className="sub">Social Asset Generator</div>
+        </div>
+        {selected.length > 0 && (
+          <button className="btn-primary" onClick={exportAll} disabled={exporting}>
+            {exporting ? "Exporting…" : `Export All — ${selected.length} formats`}
+          </button>
+        )}
+      </header>
+
+      <div className="body">
+        {/* Sidebar */}
+        <aside className="sidebar">
+          <div className="tabs">
+            {["image","text","formats","export"].map(t=>(
+              <button key={t} className={tab===t?"active":""} onClick={()=>setTab(t)}>{t}</button>
+            ))}
+          </div>
+
+          <div className="panel">
+            {/* ── IMAGE ────────────────── */}
+            {tab==="image" && <>
+              <div className="section">
+                <div className="section-title">Image</div>
+                <input ref={fileRef} type="file" accept="image/*" style={{display:"none"}} onChange={handleImage}/>
+                <button className="upload-zone" onClick={()=>fileRef.current.click()}>
+                  {image ? "Replace image" : "Click to upload image"}
+                </button>
+                {image && <img src={image} className="img-preview" alt=""/>}
+              </div>
+
+              {image && <div className="section">
+                <div className="section-title">Position</div>
+                <div className="field">
+                  <div className="field-label"><span>Horizontal</span><span className="val">{imgPos.x}%</span></div>
+                  <input type="range" min={-100} max={100} value={imgPos.x} onChange={e=>setImgPos(p=>({...p,x:+e.target.value}))}/>
+                </div>
+                <div className="field">
+                  <div className="field-label"><span>Vertical</span><span className="val">{imgPos.y}%</span></div>
+                  <input type="range" min={-100} max={100} value={imgPos.y} onChange={e=>setImgPos(p=>({...p,y:+e.target.value}))}/>
+                </div>
+              </div>}
+
+              <div className="section">
+                <div className="section-title">Background</div>
+                <div className="inline-row" style={{gap:10}}>
+                  <input type="color" value={bgColor} onChange={e=>setBgColor(e.target.value)}/>
+                  <input type="text" value={bgColor} onChange={e=>setBgColor(e.target.value)} className="mono" style={{flex:1, fontSize:11}}/>
+                </div>
+              </div>
+
+              <div className="section">
+                <div className="section-title">Overlay</div>
+                <div className="overlay-grid">
+                  {OVERLAYS.map(o=>(
+                    <button key={o.value} className={`overlay-btn ${overlay===o.value?"active":""}`} onClick={()=>setOverlay(o.value)}>{o.label}</button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="section">
+                <div className="section-title">Custom Font</div>
+                <input ref={fontRef} type="file" accept=".ttf,.otf,.woff,.woff2" style={{display:"none"}} onChange={handleFont}/>
+                <button className="upload-zone" onClick={()=>fontRef.current.click()}>
+                  {fontLoaded ? <><span className="mono" style={{color:"var(--text-1)"}}>{fontName}</span></> : "Upload .ttf / .otf / .woff"}
+                </button>
+              </div>
+            </>}
+
+            {/* ── TEXT ─────────────────── */}
+            {tab==="text" && <>
+              <div className="section">
+                <div className="section-title">Layers</div>
+                <div className="toggle-row" style={{marginBottom:8}}>
+                  {layers.map((l,i)=>(
+                    <button key={l.id} className={`btn ${activeLayer===i?"active":""}`} onClick={()=>setActiveLayer(i)}>
+                      {i+1}
+                    </button>
+                  ))}
+                  <button className="btn" onClick={addLayer} style={{color:"var(--text-3)"}}>+</button>
+                </div>
+                {layers.length>1 && <button className="btn-ghost danger" onClick={()=>removeLayer(activeLayer)}>Remove layer {activeLayer+1}</button>}
+              </div>
+
+              <div className="section">
+                <div className="section-title">Content</div>
+                <textarea value={L.text} onChange={e=>updateLayer(activeLayer,"text",e.target.value)} rows={3} placeholder="Enter text…"/>
+              </div>
+
+              <div className="section">
+                <div className="section-title">Typography</div>
+                <div className="field">
+                  <div className="field-label"><span>Size</span><span className="val">{L.fontSize}px</span></div>
+                  <input type="range" min={12} max={200} value={L.fontSize} onChange={e=>updateLayer(activeLayer,"fontSize",+e.target.value)}/>
+                </div>
+                <div className="inline-row" style={{marginBottom:10}}>
+                  <span style={{fontSize:11,color:"var(--text-3)"}}>Color</span>
+                  <input type="color" value={L.color} onChange={e=>updateLayer(activeLayer,"color",e.target.value)}/>
+                </div>
+                <div className="toggle-row">
+                  <button className={`btn ${L.bold?"active":""}`} onClick={()=>updateLayer(activeLayer,"bold",!L.bold)}>Bold</button>
+                  <button className={`btn ${L.italic?"active":""}`} onClick={()=>updateLayer(activeLayer,"italic",!L.italic)}>Italic</button>
+                  <span style={{width:8}}/>
+                  {["left","center","right"].map(a=>(
+                    <button key={a} className={`btn ${L.align===a?"active":""}`} onClick={()=>updateLayer(activeLayer,"align",a)}>
+                      {a[0].toUpperCase()+a.slice(1)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="section">
+                <div className="section-title">Position</div>
+                <div className="field">
+                  <div className="field-label"><span>X</span><span className="val">{L.xPct}%</span></div>
+                  <input type="range" min={0} max={100} value={L.xPct} onChange={e=>updateLayer(activeLayer,"xPct",+e.target.value)}/>
+                </div>
+                <div className="field">
+                  <div className="field-label"><span>Y</span><span className="val">{L.yPct}%</span></div>
+                  <input type="range" min={0} max={100} value={L.yPct} onChange={e=>updateLayer(activeLayer,"yPct",+e.target.value)}/>
+                </div>
+                <div className="field">
+                  <div className="field-label"><span>Max Width</span><span className="val">{L.maxWidthPct}%</span></div>
+                  <input type="range" min={10} max={100} value={L.maxWidthPct} onChange={e=>updateLayer(activeLayer,"maxWidthPct",+e.target.value)}/>
+                </div>
+              </div>
+
+              <div className="section">
+                <div className="section-title">Effects</div>
+                <div className="check-row">
+                  <input type="checkbox" checked={L.shadowEnabled} onChange={e=>updateLayer(activeLayer,"shadowEnabled",e.target.checked)}/>
+                  <span>Drop Shadow</span>
+                  {L.shadowEnabled && <input type="color" value={L.shadowColor} onChange={e=>updateLayer(activeLayer,"shadowColor",e.target.value)} style={{marginLeft:"auto",width:24,height:24}}/>}
+                </div>
+                {L.shadowEnabled && <div className="field">
+                  <div className="field-label"><span>Blur</span><span className="val">{L.shadowBlur}</span></div>
+                  <input type="range" min={0} max={30} value={L.shadowBlur} onChange={e=>updateLayer(activeLayer,"shadowBlur",+e.target.value)}/>
+                </div>}
+                <div className="field">
+                  <div className="field-label"><span>Letter Spacing</span><span className="val">{L.letterSpacing}</span></div>
+                  <input type="range" min={0} max={20} value={L.letterSpacing} onChange={e=>updateLayer(activeLayer,"letterSpacing",+e.target.value)}/>
+                </div>
+                <div className="field">
+                  <div className="field-label"><span>Line Height</span><span className="val">{L.lineHeight}</span></div>
+                  <input type="range" min={0.8} max={2.5} step={0.1} value={L.lineHeight} onChange={e=>updateLayer(activeLayer,"lineHeight",+e.target.value)}/>
+                </div>
+              </div>
+
+              <div className="section">
+                <div className="section-title">Text Background</div>
+                <div className="check-row">
+                  <input type="checkbox" checked={L.bgEnabled} onChange={e=>updateLayer(activeLayer,"bgEnabled",e.target.checked)}/>
+                  <span>Enable</span>
+                  {L.bgEnabled && <input type="color" value={L.bgColor} onChange={e=>updateLayer(activeLayer,"bgColor",e.target.value)} style={{marginLeft:"auto",width:24,height:24}}/>}
+                </div>
+                {L.bgEnabled && <div className="field">
+                  <div className="field-label"><span>Opacity</span><span className="val">{L.bgOpacity}%</span></div>
+                  <input type="range" min={0} max={100} value={L.bgOpacity} onChange={e=>updateLayer(activeLayer,"bgOpacity",+e.target.value)}/>
+                </div>}
+              </div>
+            </>}
+
+            {/* ── FORMATS ─────────────── */}
+            {tab==="formats" && <>
+              <div className="section">
+                <div className="section-title">Select Sizes</div>
+                {PRESETS.map(p=>(
+                  <div key={p.id} className={`format-card ${selected.includes(p.id)?"selected":""}`} onClick={()=>toggleFmt(p.id)}>
+                    <input type="checkbox" checked={selected.includes(p.id)} onChange={()=>toggleFmt(p.id)}/>
+                    <div className="info">
+                      <div className="name">{p.label}</div>
+                      <div className="dims">{p.w} × {p.h} — {p.ratio}</div>
+                    </div>
+                    <button className="btn-ghost" onClick={e=>{e.stopPropagation();setPreview(p.id);}}>Preview</button>
+                  </div>
+                ))}
+                <div className="inline-row" style={{marginTop:10,gap:12}}>
+                  <button className="btn-ghost" onClick={()=>setSelected(PRESETS.map(p=>p.id))}>Select all</button>
+                  <button className="btn-ghost" onClick={()=>setSelected([])}>Clear</button>
+                </div>
+              </div>
+            </>}
+
+            {/* ── EXPORT ──────────────── */}
+            {tab==="export" && <>
+              <div className="section">
+                <div className="section-title">Download</div>
+                {selected.length===0 ? (
+                  <p style={{fontSize:12,color:"var(--text-4)"}}>No formats selected.</p>
+                ) : (
+                  selected.map(id => {
+                    const p=PRESETS.find(x=>x.id===id);
+                    return (
+                      <div key={id} className="export-card">
+                        <div>
+                          <div className="name">{p.label}</div>
+                          <div className="dims">{p.w}×{p.h}</div>
+                        </div>
+                        <button className="btn" onClick={()=>exportOne(id)}>PNG</button>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+              {selected.length>1 && (
+                <button className="btn-primary" style={{width:"100%"}} onClick={exportAll} disabled={exporting}>
+                  {exporting ? "Exporting…" : `Download all ${selected.length} formats`}
+                </button>
+              )}
+            </>}
+          </div>
+        </aside>
+
+        {/* Canvas */}
+        <main className="canvas-area">
+          <div className="format-pills">
+            {selected.map(id=>{
+              const p=PRESETS.find(x=>x.id===id);
+              return <button key={id} className={`pill ${preview===id?"active":""}`} onClick={()=>setPreview(id)}>{p.label}</button>;
+            })}
+          </div>
+          <div className="canvas-meta">{presetObj.label} — {presetObj.w}×{presetObj.h} — {presetObj.ratio}</div>
+          <div className="canvas-wrap">
+            <canvas ref={canvasRef}/>
+          </div>
+        </main>
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>
