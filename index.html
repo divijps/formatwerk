@@ -1,0 +1,946 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Formatwerk — Social Asset Generator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+  :root{
+    --bg-0:#09090b;--bg-1:#111113;--bg-2:#18181b;--bg-3:#1f1f23;--bg-4:#27272a;
+    --border:#2a2a2e;--border-h:#3f3f46;
+    --t0:#fafafa;--t1:#d4d4d8;--t2:#a1a1aa;--t3:#71717a;--t4:#52525b;
+    --accent-s:rgba(228,228,231,0.08);
+    --mono:'JetBrains Mono',monospace;--sans:'Inter',-apple-system,system-ui,sans-serif;
+    --r:6px;--rl:10px;
+  }
+  html,body,#root{height:100%;background:var(--bg-0);color:var(--t1);font-family:var(--sans);-webkit-font-smoothing:antialiased}
+  ::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--bg-4);border-radius:3px}
+  :focus-visible{outline:1px solid var(--t4);outline-offset:2px}
+  .mono{font-family:var(--mono)}
+  .app{display:flex;flex-direction:column;height:100vh;overflow:hidden}
+  .header{display:flex;align-items:center;justify-content:space-between;padding:14px 24px;border-bottom:1px solid var(--border);background:var(--bg-1)}
+  .header h1{font-size:14px;font-weight:600;letter-spacing:-.02em;color:var(--t0)}
+  .header .sub{font-size:10px;color:var(--t4);margin-top:1px;font-family:var(--mono);letter-spacing:.06em;text-transform:uppercase}
+  .body{display:flex;flex:1;overflow:hidden}
+  .sidebar{width:340px;min-width:340px;border-right:1px solid var(--border);display:flex;flex-direction:column;background:var(--bg-1);overflow:hidden}
+  .tabs{display:flex;border-bottom:1px solid var(--border)}
+  .tabs button{flex:1;padding:11px 0;font-size:9px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;background:none;border:none;color:var(--t4);cursor:pointer;transition:color .15s;font-family:var(--mono)}
+  .tabs button:hover{color:var(--t2)}.tabs button.active{color:var(--t0);box-shadow:inset 0 -1px 0 var(--t0)}
+  .panel{flex:1;overflow-y:auto;padding:20px}
+  .section{margin-bottom:22px}.section-title{font-size:9px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--t4);margin-bottom:8px;font-family:var(--mono)}
+  .upload-zone{border:1px dashed var(--border);border-radius:var(--r);padding:20px 14px;text-align:center;font-size:11px;color:var(--t3);cursor:pointer;transition:all .15s;background:transparent;width:100%;font-family:var(--sans)}
+  .upload-zone:hover{border-color:var(--t4);color:var(--t2);background:var(--accent-s)}
+  .upload-zone.has-file{border-style:solid;border-color:var(--border-h)}
+  .field{margin-bottom:8px}.field-label{font-size:10px;color:var(--t3);margin-bottom:4px;display:flex;justify-content:space-between}
+  .field-label .val{font-family:var(--mono);font-size:9px;color:var(--t4)}
+  input[type="range"]{-webkit-appearance:none;width:100%;height:3px;background:var(--bg-4);border-radius:2px;outline:none}
+  input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;background:var(--t0);border-radius:50%;cursor:pointer;border:2px solid var(--bg-0)}
+  input[type="color"]{-webkit-appearance:none;border:1px solid var(--border);border-radius:var(--r);width:28px;height:28px;cursor:pointer;background:transparent;padding:2px}
+  input[type="color"]::-webkit-color-swatch-wrapper{padding:0}input[type="color"]::-webkit-color-swatch{border:none;border-radius:3px}
+  input[type="text"],textarea{width:100%;background:var(--bg-2);border:1px solid var(--border);border-radius:var(--r);padding:7px 10px;font-size:11px;color:var(--t1);font-family:var(--sans);transition:border-color .15s;resize:none}
+  input[type="text"]:focus,textarea:focus{border-color:var(--t4);outline:none}
+  input[type="checkbox"]{-webkit-appearance:none;width:13px;height:13px;border:1px solid var(--border);border-radius:3px;background:var(--bg-2);cursor:pointer;position:relative;flex-shrink:0}
+  input[type="checkbox"]:checked{background:var(--t0);border-color:var(--t0)}
+  input[type="checkbox"]:checked::after{content:'';position:absolute;left:3.5px;top:1px;width:4px;height:7px;border:solid var(--bg-0);border-width:0 1.5px 1.5px 0;transform:rotate(45deg)}
+  .btn{padding:6px 12px;border-radius:var(--r);font-size:10px;font-weight:500;border:1px solid var(--border);background:var(--bg-2);color:var(--t2);cursor:pointer;transition:all .15s;font-family:var(--sans)}
+  .btn:hover{border-color:var(--border-h);color:var(--t1);background:var(--bg-3)}.btn.active{background:var(--t0);color:var(--bg-0);border-color:var(--t0)}
+  .btn-primary{padding:9px 18px;border-radius:var(--r);font-size:11px;font-weight:600;border:none;background:var(--t0);color:var(--bg-0);cursor:pointer;transition:all .15s;font-family:var(--sans);letter-spacing:-.01em}
+  .btn-primary:hover{opacity:.9}.btn-primary:disabled{opacity:.35;cursor:default}
+  .btn-ghost{background:none;border:none;color:var(--t3);font-size:10px;cursor:pointer;padding:3px 0;font-family:var(--mono);transition:color .15s}
+  .btn-ghost:hover{color:var(--t1)}.btn-ghost.danger:hover{color:#ef4444}
+  .pill{padding:4px 11px;border-radius:20px;font-size:10px;font-weight:500;border:1px solid var(--border);background:transparent;color:var(--t3);cursor:pointer;transition:all .15s;font-family:var(--sans)}
+  .pill:hover{border-color:var(--border-h);color:var(--t2)}.pill.active{background:var(--t0);color:var(--bg-0);border-color:var(--t0)}
+  .format-card{display:flex;align-items:center;gap:10px;padding:10px;border-radius:var(--r);border:1px solid var(--border);cursor:pointer;transition:all .15s;margin-bottom:5px;background:transparent}
+  .format-card:hover{border-color:var(--border-h);background:var(--accent-s)}.format-card.selected{border-color:var(--t3);background:var(--accent-s)}
+  .format-card .name{font-size:11px;font-weight:500;color:var(--t1)}.format-card .dims{font-size:9px;color:var(--t4);font-family:var(--mono);margin-top:1px}
+  .overlay-grid{display:grid;grid-template-columns:1fr 1fr;gap:3px}
+  .overlay-btn{padding:7px;border-radius:var(--r);font-size:9px;font-weight:500;background:var(--bg-2);border:1px solid var(--border);color:var(--t3);cursor:pointer;transition:all .15s;font-family:var(--sans)}
+  .overlay-btn:hover{border-color:var(--border-h);color:var(--t2)}.overlay-btn.active{background:var(--t0);color:var(--bg-0);border-color:var(--t0)}
+  .toggle-row{display:flex;gap:3px;flex-wrap:wrap}
+  .export-card{display:flex;align-items:center;justify-content:space-between;padding:10px;border-radius:var(--r);border:1px solid var(--border);background:var(--bg-2);margin-bottom:5px}
+  .export-card .name{font-size:11px;font-weight:500;color:var(--t1)}.export-card .dims{font-size:9px;color:var(--t4);font-family:var(--mono)}
+  .canvas-area{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px;background:var(--bg-0);overflow:auto}
+  .canvas-meta{font-size:9px;color:var(--t4);font-family:var(--mono);margin-bottom:10px;letter-spacing:.04em}
+  .canvas-wrap{border:1px solid var(--border);border-radius:var(--rl);overflow:hidden;box-shadow:0 0 0 1px rgba(0,0,0,.5),0 24px 48px rgba(0,0,0,.4)}
+  .canvas-wrap canvas{display:block;max-height:calc(100vh - 220px);max-width:100%;object-fit:contain}
+  .format-pills{display:flex;gap:5px;margin-bottom:14px;flex-wrap:wrap;justify-content:center}
+  .inline-row{display:flex;align-items:center;gap:8px}
+  .check-row{display:flex;align-items:center;gap:7px;margin-bottom:5px}
+  .check-row span{font-size:10px;color:var(--t3)}
+  .img-preview{width:100%;height:60px;object-fit:cover;border-radius:var(--r);opacity:.5;margin-top:6px;border:1px solid var(--border)}
+  .layout-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px}
+  .layout-card{padding:10px 6px;border-radius:var(--r);border:1px solid var(--border);background:var(--bg-2);cursor:pointer;text-align:center;transition:all .15s}
+  .layout-card:hover{border-color:var(--border-h)}.layout-card.active{border-color:var(--t0);background:var(--accent-s)}
+  .layout-card .lname{font-size:9px;font-weight:600;color:var(--t2);margin-top:4px}
+  .layout-card svg{display:block;margin:0 auto}
+  .batch-badge{display:inline-block;font-size:9px;font-family:var(--mono);background:var(--bg-4);color:var(--t1);padding:2px 8px;border-radius:10px;margin-left:6px}
+  .combo-nav{display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--bg-2);border:1px solid var(--border);border-radius:var(--r);margin-bottom:12px}
+  .combo-nav .label{font-size:10px;color:var(--t3);font-family:var(--mono)}
+  .combo-nav button{background:var(--bg-3);border:1px solid var(--border);color:var(--t1);width:24px;height:24px;border-radius:var(--r);cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center}
+  .combo-nav button:hover{background:var(--bg-4)}
+  .progress-bar{width:100%;height:3px;background:var(--bg-4);border-radius:2px;overflow:hidden;margin-top:8px}
+  .progress-bar .fill{height:100%;background:var(--t0);transition:width .2s}
+  .feature-tag{display:inline-block;font-size:8px;font-family:var(--mono);color:var(--t4);background:var(--bg-3);padding:2px 6px;border-radius:3px;margin:1px}
+  .feature-tag.on{color:var(--t1);background:var(--bg-4)}
+  @media(max-width:768px){.body{flex-direction:column}.sidebar{width:100%;min-width:auto;max-height:50vh;border-right:none;border-bottom:1px solid var(--border)}.canvas-area{padding:16px}}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/opentype.js/1.3.4/opentype.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
+<script type="text/babel">
+const {useState,useRef,useEffect,useCallback} = React;
+
+/* ═══════════════════════════════════════════════════
+   CONSTANTS
+   ═══════════════════════════════════════════════════ */
+const PRESETS = [
+  {id:"feed",label:"Feed Post",w:1080,h:1350,ratio:"4:5"},
+  {id:"story",label:"Story / Reel",w:1080,h:1920,ratio:"9:16"},
+  {id:"square",label:"Square",w:1080,h:1080,ratio:"1:1"},
+  {id:"landscape",label:"Landscape",w:1200,h:628,ratio:"1.91:1"},
+  {id:"twitter",label:"X / Twitter",w:1600,h:900,ratio:"16:9"},
+  {id:"pinterest",label:"Pinterest",w:1000,h:1500,ratio:"2:3"},
+  {id:"yt_thumb",label:"YT Thumbnail",w:1280,h:720,ratio:"16:9"},
+  {id:"fb_cover",label:"FB Cover",w:820,h:312,ratio:"2.63:1"},
+];
+
+const OVERLAYS = [
+  {label:"None",v:"none"},{label:"Vignette",v:"dark-vignette"},
+  {label:"Soft Light",v:"light-fade"},{label:"Bottom",v:"bottom-gradient"},
+  {label:"Top",v:"top-gradient"},{label:"Darken",v:"full-darken"},
+];
+
+const LAYOUTS = [
+  {id:"center",label:"Center",
+    logo:{xPct:50,yPct:12},head:{xPct:50,yPct:48,align:"center",maxWPct:85},sub:{xPct:50,yPct:84,align:"center"}},
+  {id:"bottom",label:"Bottom",
+    logo:{xPct:50,yPct:10},head:{xPct:50,yPct:68,align:"center",maxWPct:85},sub:{xPct:50,yPct:88,align:"center"}},
+  {id:"top",label:"Top",
+    logo:{xPct:50,yPct:8},head:{xPct:50,yPct:28,align:"center",maxWPct:85},sub:{xPct:50,yPct:50,align:"center"}},
+  {id:"left",label:"Left",
+    logo:{xPct:8,yPct:10},head:{xPct:8,yPct:48,align:"left",maxWPct:75},sub:{xPct:8,yPct:78,align:"left"}},
+  {id:"btm-left",label:"Btm Left",
+    logo:{xPct:8,yPct:10},head:{xPct:8,yPct:66,align:"left",maxWPct:80},sub:{xPct:8,yPct:88,align:"left"}},
+  {id:"editorial",label:"Editorial",
+    logo:{xPct:50,yPct:6},head:{xPct:50,yPct:55,align:"center",maxWPct:92},sub:{xPct:50,yPct:92,align:"center"}},
+];
+
+// OpenType feature tiers
+function getOTFeatures(level) {
+  if (level <= 0) return null;
+  const f = {};
+  if (level >= 1)  { f.liga = true; f.kern = true; }
+  if (level >= 20) { f.dlig = true; }
+  if (level >= 40) { f.calt = true; }
+  if (level >= 55) { f.salt = true; }
+  if (level >= 70) { f.swsh = true; }
+  if (level >= 80) { for(let i=1;i<=20;i++) f[`ss${String(i).padStart(2,'0')}`] = true; }
+  return f;
+}
+
+function featureLabels(level) {
+  const tags = [];
+  if (level >= 1)  tags.push("liga","kern");
+  if (level >= 20) tags.push("dlig");
+  if (level >= 40) tags.push("calt");
+  if (level >= 55) tags.push("salt");
+  if (level >= 70) tags.push("swsh");
+  if (level >= 80) tags.push("ss01–20");
+  return tags;
+}
+
+/* ═══════════════════════════════════════════════════
+   DRAWING ENGINE
+   ═══════════════════════════════════════════════════ */
+function wrapText(ctx, text, maxW) {
+  const lines = [];
+  text.split("\n").forEach(para => {
+    const words = para.split(" ");
+    let cur = "";
+    words.forEach(w => {
+      const t = cur ? cur+" "+w : w;
+      if (ctx.measureText(t).width > maxW && cur) { lines.push(cur); cur = w; }
+      else cur = t;
+    });
+    if (cur) lines.push(cur);
+  });
+  return lines.length ? lines : [""];
+}
+
+function wrapTextOT(otFont, text, fontSize, maxW, features) {
+  const lines = [];
+  text.split("\n").forEach(para => {
+    const words = para.split(" ");
+    let cur = "";
+    words.forEach(w => {
+      const t = cur ? cur+" "+w : w;
+      const tw = otFont.getAdvanceWidth(t, fontSize, {features});
+      if (tw > maxW && cur) {
+        lines.push(cur);
+        cur = w;
+      } else cur = t;
+    });
+    if (cur) lines.push(cur);
+  });
+  return lines.length ? lines : [""];
+}
+
+function drawCanvas(canvas, params) {
+  const {preset,img,imgPos,logoImg,logoScale,layout,
+    headText,headFontName,headOTFont,headSize,headColor,headBold,headItalic,
+    headShadow,headShadowColor,headShadowBlur,headLetterSp,headLineH,headMaxWPct,
+    ligLevel,
+    subText,subFontName,subSize,subColor,subBold,subLetterSp,subLineH,
+    overlay,bgColor} = params;
+
+  const ctx = canvas.getContext("2d");
+  const W = preset.w, H = preset.h;
+  canvas.width = W; canvas.height = H;
+
+  // Background
+  ctx.fillStyle = bgColor;
+  ctx.fillRect(0,0,W,H);
+
+  // Image (cover fit)
+  if (img) {
+    const ir=img.width/img.height, cr=W/H;
+    let sw,sh,sx,sy;
+    if (ir>cr) {
+      sh=img.height; sw=img.height*cr;
+      sx=(img.width-sw)/2+(imgPos.x/100)*((img.width-sw)/2);
+      sy=(img.height-sh)/2+(imgPos.y/100)*((img.height-sh)/2);
+    } else {
+      sw=img.width; sh=img.width/cr;
+      sx=(img.width-sw)/2+(imgPos.x/100)*((img.width-sw)/2);
+      sy=(img.height-sh)/2+(imgPos.y/100)*((img.height-sh)/2);
+    }
+    ctx.drawImage(img,sx,sy,sw,sh,0,0,W,H);
+  }
+
+  // Overlay
+  applyOverlay(ctx,W,H,overlay);
+
+  // Logo
+  const lo = layout.logo;
+  if (logoImg) {
+    const scale = (logoScale/100) * (Math.min(W,H)/1080);
+    const lw = logoImg.width * scale;
+    const lh = logoImg.height * scale;
+    const lx = (lo.xPct/100)*W - lw/2;
+    const ly = (lo.yPct/100)*H - lh/2;
+    ctx.drawImage(logoImg, lx, ly, lw, lh);
+  }
+
+  // Headline
+  const hd = layout.head;
+  const headAlign = hd.align;
+  const headX = (hd.xPct/100)*W;
+  const headY = (hd.yPct/100)*H;
+  const headMaxW = ((headMaxWPct||hd.maxWPct||85)/100)*W;
+  const headFS = (headSize/1080)*Math.min(W,H);
+
+  // Use opentype.js if available and ligatures enabled
+  const useOT = ligLevel > 0 && headOTFont && window.opentype;
+
+  if (headText) {
+    ctx.save();
+    if (headShadow) {
+      ctx.shadowColor = headShadowColor;
+      ctx.shadowBlur = headShadowBlur;
+      ctx.shadowOffsetX = 2; ctx.shadowOffsetY = 2;
+    }
+
+    if (useOT) {
+      const features = getOTFeatures(ligLevel);
+      drawTextOT(ctx, headOTFont, headText, headX, headY, headFS, headAlign, headMaxW, headColor, headBold, headLineH, headLetterSp, features);
+    } else {
+      drawTextStd(ctx, headText, headX, headY, headFS, headFontName||"Inter", headAlign, headMaxW, headColor, headBold, headItalic, headLineH, headLetterSp);
+    }
+    ctx.restore();
+  }
+
+  // Subhead
+  const sd = layout.sub;
+  if (subText) {
+    const subFS = (subSize/1080)*Math.min(W,H);
+    const subX = (sd.xPct/100)*W;
+    const subY = (sd.yPct/100)*H;
+    const subMaxW = W * 0.8;
+    ctx.save();
+    drawTextStd(ctx, subText, subX, subY, subFS, subFontName||"Inter", sd.align, subMaxW, subColor, subBold, false, subLineH, subLetterSp);
+    ctx.restore();
+  }
+}
+
+function drawTextOT(ctx, otFont, text, x, y, fontSize, align, maxW, color, bold, lineH, letterSp, features) {
+  try {
+    const lines = wrapTextOT(otFont, text, fontSize, maxW, features);
+    const lhPx = fontSize * (lineH || 1.2);
+    const totalH = lines.length * lhPx;
+    const ascent = otFont.ascender * (fontSize / otFont.unitsPerEm);
+
+    lines.forEach((line, i) => {
+      const lineWidth = otFont.getAdvanceWidth(line, fontSize, {features});
+      let lx;
+      if (align === "center") lx = x - lineWidth/2;
+      else if (align === "right") lx = x - lineWidth;
+      else lx = x;
+
+      const ly = y - totalH/2 + i*lhPx + ascent*0.72;
+
+      const path = otFont.getPath(line, lx, ly, fontSize, {features});
+      path.fill = color;
+      path.draw(ctx);
+    });
+  } catch(e) {
+    console.warn("OT render failed, fallback:", e);
+    drawTextStd(ctx, text, x, y, fontSize, "Inter", align, maxW, color, bold, false, lineH, letterSp);
+  }
+}
+
+function drawTextStd(ctx, text, x, y, fontSize, fontFamily, align, maxW, color, bold, italic, lineH, letterSp) {
+  const style = `${italic?"italic ":""}${bold?"700 ":"400 "}`;
+  ctx.font = `${style}${fontSize}px "${fontFamily}", Inter, sans-serif`;
+  ctx.fillStyle = color;
+  ctx.textAlign = align;
+  ctx.textBaseline = "middle";
+
+  const lines = wrapText(ctx, text, maxW);
+  const lhPx = fontSize * (lineH || 1.2);
+  const totalH = lines.length * lhPx;
+  const startY = y - totalH/2 + lhPx/2;
+
+  lines.forEach((line, i) => {
+    const ly = startY + i*lhPx;
+    if (letterSp > 0) {
+      const tw = ctx.measureText(line).width + letterSp*(line.length-1);
+      let sx = align==="center"?x-tw/2:align==="right"?x-tw:x;
+      const pa=ctx.textAlign; ctx.textAlign="left";
+      for(let c=0;c<line.length;c++){ctx.fillText(line[c],sx,ly);sx+=ctx.measureText(line[c]).width+letterSp;}
+      ctx.textAlign=pa;
+    } else {
+      ctx.fillText(line, x, ly);
+    }
+  });
+}
+
+function applyOverlay(ctx,w,h,ov) {
+  if(ov==="none")return;
+  let g;
+  switch(ov){
+    case"dark-vignette":g=ctx.createRadialGradient(w/2,h/2,w*.2,w/2,h/2,w*.8);g.addColorStop(0,"rgba(0,0,0,0)");g.addColorStop(1,"rgba(0,0,0,.55)");ctx.fillStyle=g;ctx.fillRect(0,0,w,h);break;
+    case"light-fade":ctx.fillStyle="rgba(255,255,255,.2)";ctx.fillRect(0,0,w,h);break;
+    case"bottom-gradient":g=ctx.createLinearGradient(0,h*.4,0,h);g.addColorStop(0,"rgba(0,0,0,0)");g.addColorStop(1,"rgba(0,0,0,.65)");ctx.fillStyle=g;ctx.fillRect(0,0,w,h);break;
+    case"top-gradient":g=ctx.createLinearGradient(0,0,0,h*.5);g.addColorStop(0,"rgba(0,0,0,.65)");g.addColorStop(1,"rgba(0,0,0,0)");ctx.fillStyle=g;ctx.fillRect(0,0,w,h);break;
+    case"full-darken":ctx.fillStyle="rgba(0,0,0,.4)";ctx.fillRect(0,0,w,h);break;
+  }
+}
+
+/* ═══════════════════════════════════════════════════
+   LAYOUT MINI DIAGRAMS (SVG)
+   ═══════════════════════════════════════════════════ */
+function LayoutIcon({layout, size=40}) {
+  const s = size;
+  const lo = layout.logo, hd = layout.head, sd = layout.sub;
+  const lx = lo.xPct/100*s, ly = lo.yPct/100*s;
+  const hx = hd.xPct/100*s, hy = hd.yPct/100*s;
+  const sx = sd.xPct/100*s, sy = sd.yPct/100*s;
+  const al = hd.align;
+  const hw = (hd.maxWPct||70)/100*s;
+  const anchor = al==="center"?"middle":al==="right"?"end":"start";
+  return (
+    <svg width={s} height={s} viewBox={`0 0 ${s} ${s}`}>
+      <rect width={s} height={s} rx="3" fill="var(--bg-3)" stroke="var(--border)" strokeWidth=".5"/>
+      <circle cx={lx} cy={ly} r="2.5" fill="var(--t3)"/>
+      <line x1={al==="center"?hx-hw/2:al==="left"?hx:hx-hw} y1={hy} x2={al==="center"?hx+hw/2:al==="left"?hx+hw:hx} y2={hy} stroke="var(--t1)" strokeWidth="2" strokeLinecap="round"/>
+      <line x1={al==="center"?hx-hw/3:al==="left"?hx:hx-hw/1.5} y1={hy+5} x2={al==="center"?hx+hw/3:al==="left"?hx+hw/1.5:hx} y2={hy+5} stroke="var(--t2)" strokeWidth="1.5" strokeLinecap="round"/>
+      <line x1={al==="center"?sx-8:al==="left"?sx:sx-16} y1={sy} x2={al==="center"?sx+8:al==="left"?sx+16:sx} y2={sy} stroke="var(--t4)" strokeWidth="1" strokeLinecap="round"/>
+    </svg>
+  );
+}
+
+/* ═══════════════════════════════════════════════════
+   APP
+   ═══════════════════════════════════════════════════ */
+function App() {
+  // ── Brand state ─────────────────────────────
+  const [logoImg, setLogoImg] = useState(null);
+  const [logoScale, setLogoScale] = useState(100);
+  const [headFontName, setHeadFontName] = useState("");
+  const [headOTFont, setHeadOTFont] = useState(null);
+  const [subFontName, setSubFontName] = useState("");
+  const [bgColor, setBgColor] = useState("#0a0a0b");
+  const [overlay, setOverlay] = useState("none");
+
+  // ── Layout state ────────────────────────────
+  const [layoutId, setLayoutId] = useState("center");
+  const [ligLevel, setLigLevel] = useState(0);
+
+  // ── Headline style ──────────────────────────
+  const [headSize, setHeadSize] = useState(72);
+  const [headColor, setHeadColor] = useState("#ffffff");
+  const [headBold, setHeadBold] = useState(true);
+  const [headItalic, setHeadItalic] = useState(false);
+  const [headShadow, setHeadShadow] = useState(true);
+  const [headShadowColor, setHeadShadowColor] = useState("#000000");
+  const [headShadowBlur, setHeadShadowBlur] = useState(6);
+  const [headLetterSp, setHeadLetterSp] = useState(0);
+  const [headLineH, setHeadLineH] = useState(1.15);
+  const [headMaxWPct, setHeadMaxWPct] = useState(85);
+
+  // ── Subhead style ───────────────────────────
+  const [subSize, setSubSize] = useState(18);
+  const [subColor, setSubColor] = useState("#d4d4d8");
+  const [subBold, setSubBold] = useState(false);
+  const [subLetterSp, setSubLetterSp] = useState(5);
+  const [subLineH, setSubLineH] = useState(1.3);
+
+  // ── Content state ───────────────────────────
+  const [batchMode, setBatchMode] = useState(false);
+  const [images, setImages] = useState([]); // [{id,url,obj}]
+  const [imgPos, setImgPos] = useState({x:0,y:0});
+  const [headlines, setHeadlines] = useState([{id:1,headline:"YOUR HEADLINE HERE",subheadline:"SUBHEADING • TEXT"}]);
+  const [activeImgIdx, setActiveImgIdx] = useState(0);
+  const [activeHdlIdx, setActiveHdlIdx] = useState(0);
+
+  // ── Format / export ─────────────────────────
+  const [selectedFmts, setSelectedFmts] = useState(["feed","story"]);
+  const [preview, setPreview] = useState("feed");
+  const [exporting, setExporting] = useState(false);
+  const [exportProgress, setExportProgress] = useState(0);
+
+  // ── UI ──────────────────────────────────────
+  const [tab, setTab] = useState("brand");
+
+  // ── Refs ────────────────────────────────────
+  const canvasRef = useRef(null);
+  const logoRef = useRef(null);
+  const headFontRef = useRef(null);
+  const subFontRef = useRef(null);
+  const imgRef = useRef(null);
+  const csvRef = useRef(null);
+
+  // ── Derived ─────────────────────────────────
+  const layout = LAYOUTS.find(l=>l.id===layoutId);
+  const presetObj = PRESETS.find(p=>p.id===preview);
+  const activeImg = images[activeImgIdx] || null;
+  const activeHdl = headlines[activeHdlIdx] || headlines[0];
+  const totalCombos = Math.max(images.length,1) * headlines.length;
+
+  // ── File handlers ───────────────────────────
+  const handleLogo = e => {
+    const f=e.target.files[0]; if(!f) return;
+    const img = new Image();
+    img.onload = () => setLogoImg(img);
+    img.src = URL.createObjectURL(f);
+  };
+
+  const handleHeadFont = async e => {
+    const f=e.target.files[0]; if(!f) return;
+    const buf = await f.arrayBuffer();
+    const buf2 = buf.slice(0);
+    const name = f.name.replace(/\.[^.]+$/,"").replace(/[^a-zA-Z0-9]/g,"");
+    const ff = new FontFace(name, buf);
+    await ff.load(); document.fonts.add(ff);
+    setHeadFontName(name);
+    try {
+      if (window.opentype) {
+        const otf = opentype.parse(buf2);
+        setHeadOTFont(otf);
+      }
+    } catch(err) { console.warn("OT parse error:",err); }
+  };
+
+  const handleSubFont = async e => {
+    const f=e.target.files[0]; if(!f) return;
+    const buf = await f.arrayBuffer();
+    const name = f.name.replace(/\.[^.]+$/,"").replace(/[^a-zA-Z0-9]/g,"");
+    const ff = new FontFace(name, buf);
+    await ff.load(); document.fonts.add(ff);
+    setSubFontName(name);
+  };
+
+  const handleImages = e => {
+    const files = Array.from(e.target.files);
+    if (!files.length) return;
+    const newImgs = [];
+    let loaded = 0;
+    files.forEach((f,i) => {
+      const img = new Image();
+      img.onload = () => {
+        newImgs.push({id:Date.now()+i, url:img.src, obj:img, name:f.name});
+        loaded++;
+        if (loaded === files.length) {
+          setImages(prev => batchMode ? [...prev, ...newImgs] : newImgs);
+          setActiveImgIdx(0);
+        }
+      };
+      img.src = URL.createObjectURL(f);
+    });
+  };
+
+  const handleCSV = e => {
+    const f=e.target.files[0]; if(!f) return;
+    Papa.parse(f, {
+      header:true,
+      skipEmptyLines:true,
+      complete: res => {
+        const parsed = res.data
+          .filter(r => r.headline || r.Headline || r.HEADLINE)
+          .map((r,i) => ({
+            id:i+1,
+            headline: r.headline || r.Headline || r.HEADLINE || "",
+            subheadline: r.subheadline || r.Subheadline || r.SUBHEADLINE || r.subhead || r.Subhead || "",
+          }));
+        if (parsed.length) { setHeadlines(parsed); setActiveHdlIdx(0); }
+      }
+    });
+  };
+
+  const removeImage = idx => {
+    setImages(prev => prev.filter((_,i)=>i!==idx));
+    setActiveImgIdx(Math.max(0, activeImgIdx >= images.length-1 ? images.length-2 : activeImgIdx));
+  };
+
+  // ── Build params helper ─────────────────────
+  const buildParams = (preset, imgObj, hdl) => ({
+    preset, img: imgObj, imgPos, logoImg, logoScale, layout,
+    headText: hdl.headline,
+    headFontName, headOTFont, headSize, headColor, headBold, headItalic,
+    headShadow, headShadowColor, headShadowBlur, headLetterSp, headLineH, headMaxWPct,
+    ligLevel,
+    subText: hdl.subheadline,
+    subFontName, subSize, subColor, subBold, subLetterSp, subLineH,
+    overlay, bgColor,
+  });
+
+  // ── Redraw ──────────────────────────────────
+  const redraw = useCallback(() => {
+    const c = canvasRef.current; if(!c) return;
+    const p = PRESETS.find(x=>x.id===preview); if(!p) return;
+    drawCanvas(c, buildParams(p, activeImg?.obj || null, activeHdl));
+  }, [preview,activeImg,activeHdl,imgPos,logoImg,logoScale,layoutId,
+      headFontName,headOTFont,headSize,headColor,headBold,headItalic,
+      headShadow,headShadowColor,headShadowBlur,headLetterSp,headLineH,headMaxWPct,
+      ligLevel,subFontName,subSize,subColor,subBold,subLetterSp,subLineH,
+      overlay,bgColor,headlines,activeHdlIdx]);
+
+  useEffect(()=>{redraw();},[redraw]);
+
+  // ── Export helpers ──────────────────────────
+  const exportOne = (presetId, imgObj, hdl) => {
+    const p = PRESETS.find(x=>x.id===presetId);
+    const c = document.createElement("canvas");
+    drawCanvas(c, buildParams(p, imgObj, hdl));
+    return new Promise(r => c.toBlob(r,"image/png"));
+  };
+
+  const exportSingleFormat = async (presetId) => {
+    const blob = await exportOne(presetId, activeImg?.obj||null, activeHdl);
+    const p = PRESETS.find(x=>x.id===presetId);
+    const a=document.createElement("a");
+    a.href=URL.createObjectURL(blob);
+    a.download=`${p.label.replace(/\s+/g,"_")}_${p.w}x${p.h}.png`;
+    a.click();
+  };
+
+  const exportAll = async () => {
+    setExporting(true); setExportProgress(0);
+    const imgs = images.length > 0 ? images : [{id:0,obj:null,name:"no-image"}];
+    const total = headlines.length * imgs.length * selectedFmts.length;
+    let done = 0;
+
+    if (total <= 1) {
+      // Single export
+      const blob = await exportOne(selectedFmts[0], imgs[0].obj, headlines[0]);
+      const p = PRESETS.find(x=>x.id===selectedFmts[0]);
+      const a=document.createElement("a"); a.href=URL.createObjectURL(blob);
+      a.download=`formatwerk_${p.w}x${p.h}.png`; a.click();
+    } else {
+      // Batch ZIP
+      const zip = new JSZip();
+      for (const hdl of headlines) {
+        for (const img of imgs) {
+          for (const fmtId of selectedFmts) {
+            const p = PRESETS.find(x=>x.id===fmtId);
+            const blob = await exportOne(fmtId, img.obj, hdl);
+            const safeName = (hdl.headline||"untitled").replace(/[^a-zA-Z0-9 ]/g,"").replace(/\s+/g,"_").substring(0,30);
+            const imgName = img.name ? img.name.replace(/\.[^.]+$/,"").substring(0,20) : "img";
+            zip.file(`${safeName}_${imgName}_${p.label.replace(/\s+/g,"_")}_${p.w}x${p.h}.png`, blob);
+            done++;
+            setExportProgress(Math.round(done/total*100));
+          }
+        }
+      }
+      const content = await zip.generateAsync({type:"blob"});
+      const a=document.createElement("a");
+      a.href=URL.createObjectURL(content);
+      a.download="formatwerk-batch.zip";
+      a.click();
+    }
+    setExporting(false); setExportProgress(0);
+  };
+
+  const toggleFmt = id => setSelectedFmts(p=>p.includes(id)?p.filter(x=>x!==id):[...p,id]);
+
+  // ── Combo navigation ───────────────────────
+  const prevImg = () => setActiveImgIdx(i => i>0?i-1:images.length-1);
+  const nextImg = () => setActiveImgIdx(i => i<images.length-1?i+1:0);
+  const prevHdl = () => setActiveHdlIdx(i => i>0?i-1:headlines.length-1);
+  const nextHdl = () => setActiveHdlIdx(i => i<headlines.length-1?i+1:0);
+
+  /* ═══════════════════════════════════════════
+     RENDER
+     ═══════════════════════════════════════════ */
+  return (
+    <div className="app">
+      {/* Header */}
+      <header className="header">
+        <div>
+          <h1>Formatwerk</h1>
+          <div className="sub">Social Asset Generator</div>
+        </div>
+        <div className="inline-row" style={{gap:10}}>
+          {batchMode && <span className="batch-badge">{totalCombos} combos × {selectedFmts.length} sizes</span>}
+          {selectedFmts.length > 0 && (
+            <button className="btn-primary" onClick={exportAll} disabled={exporting}>
+              {exporting ? `Exporting… ${exportProgress}%` : `Export ${batchMode?"Batch":"All"}`}
+            </button>
+          )}
+        </div>
+      </header>
+
+      <div className="body">
+        <aside className="sidebar">
+          <div className="tabs">
+            {["brand","text","content","export"].map(t=>(
+              <button key={t} className={tab===t?"active":""} onClick={()=>setTab(t)}>{t}</button>
+            ))}
+          </div>
+          <div className="panel">
+
+            {/* ═══ BRAND TAB ═══════════════════════ */}
+            {tab==="brand" && <>
+              <div className="section">
+                <div className="section-title">Logo</div>
+                <input ref={logoRef} type="file" accept="image/*" style={{display:"none"}} onChange={handleLogo}/>
+                <button className={`upload-zone ${logoImg?"has-file":""}`} onClick={()=>logoRef.current.click()}>
+                  {logoImg ? "Replace logo" : "Upload logo image"}
+                </button>
+                {logoImg && <>
+                  <div className="field" style={{marginTop:8}}>
+                    <div className="field-label"><span>Scale</span><span className="val">{logoScale}%</span></div>
+                    <input type="range" min={10} max={300} value={logoScale} onChange={e=>setLogoScale(+e.target.value)}/>
+                  </div>
+                </>}
+              </div>
+
+              <div className="section">
+                <div className="section-title">Headline Font</div>
+                <input ref={headFontRef} type="file" accept=".ttf,.otf,.woff,.woff2" style={{display:"none"}} onChange={handleHeadFont}/>
+                <button className={`upload-zone ${headFontName?"has-file":""}`} onClick={()=>headFontRef.current.click()}>
+                  {headFontName ? <span className="mono" style={{color:"var(--t1)"}}>{headFontName}</span> : "Upload .ttf / .otf / .woff"}
+                </button>
+                {headOTFont && <div style={{fontSize:9,color:"var(--t4)",fontFamily:"var(--mono)",marginTop:4}}>OpenType features available</div>}
+              </div>
+
+              <div className="section">
+                <div className="section-title">Subhead Font</div>
+                <input ref={subFontRef} type="file" accept=".ttf,.otf,.woff,.woff2" style={{display:"none"}} onChange={handleSubFont}/>
+                <button className={`upload-zone ${subFontName?"has-file":""}`} onClick={()=>subFontRef.current.click()}>
+                  {subFontName ? <span className="mono" style={{color:"var(--t1)"}}>{subFontName}</span> : "Default: Inter"}
+                </button>
+              </div>
+
+              <div className="section">
+                <div className="section-title">Background</div>
+                <div className="inline-row" style={{gap:10}}>
+                  <input type="color" value={bgColor} onChange={e=>setBgColor(e.target.value)}/>
+                  <input type="text" value={bgColor} onChange={e=>setBgColor(e.target.value)} className="mono" style={{flex:1,fontSize:10}}/>
+                </div>
+              </div>
+
+              <div className="section">
+                <div className="section-title">Overlay</div>
+                <div className="overlay-grid">
+                  {OVERLAYS.map(o=>(
+                    <button key={o.v} className={`overlay-btn ${overlay===o.v?"active":""}`} onClick={()=>setOverlay(o.v)}>{o.label}</button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="section">
+                <div className="section-title">Layout Preset</div>
+                <div className="layout-grid">
+                  {LAYOUTS.map(l=>(
+                    <div key={l.id} className={`layout-card ${layoutId===l.id?"active":""}`} onClick={()=>setLayoutId(l.id)}>
+                      <LayoutIcon layout={l} size={44}/>
+                      <div className="lname">{l.label}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </>}
+
+            {/* ═══ TEXT TAB ═════════════════════════ */}
+            {tab==="text" && <>
+              {/* Ligatures */}
+              <div className="section">
+                <div className="section-title">OpenType Ligatures</div>
+                {!headOTFont && <div style={{fontSize:10,color:"var(--t4)",marginBottom:6}}>Upload a headline font with OT features to enable</div>}
+                <div className="field">
+                  <div className="field-label"><span>Level</span><span className="val">{ligLevel}%</span></div>
+                  <input type="range" min={0} max={100} value={ligLevel} onChange={e=>setLigLevel(+e.target.value)} disabled={!headOTFont}/>
+                </div>
+                {ligLevel > 0 && (
+                  <div style={{marginTop:4}}>
+                    {featureLabels(ligLevel).map(f=>(
+                      <span key={f} className="feature-tag on">{f}</span>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Headline style */}
+              <div className="section">
+                <div className="section-title">Headline Style</div>
+                <div className="field">
+                  <div className="field-label"><span>Size</span><span className="val">{headSize}px</span></div>
+                  <input type="range" min={16} max={200} value={headSize} onChange={e=>setHeadSize(+e.target.value)}/>
+                </div>
+                <div className="inline-row" style={{marginBottom:8}}>
+                  <span style={{fontSize:10,color:"var(--t3)"}}>Color</span>
+                  <input type="color" value={headColor} onChange={e=>setHeadColor(e.target.value)}/>
+                </div>
+                <div className="toggle-row" style={{marginBottom:8}}>
+                  <button className={`btn ${headBold?"active":""}`} onClick={()=>setHeadBold(!headBold)}>Bold</button>
+                  <button className={`btn ${headItalic?"active":""}`} onClick={()=>setHeadItalic(!headItalic)}>Italic</button>
+                </div>
+                <div className="field">
+                  <div className="field-label"><span>Letter Spacing</span><span className="val">{headLetterSp}</span></div>
+                  <input type="range" min={0} max={20} value={headLetterSp} onChange={e=>setHeadLetterSp(+e.target.value)}/>
+                </div>
+                <div className="field">
+                  <div className="field-label"><span>Line Height</span><span className="val">{headLineH}</span></div>
+                  <input type="range" min={0.8} max={2.5} step={0.05} value={headLineH} onChange={e=>setHeadLineH(+e.target.value)}/>
+                </div>
+                <div className="field">
+                  <div className="field-label"><span>Max Width</span><span className="val">{headMaxWPct}%</span></div>
+                  <input type="range" min={20} max={100} value={headMaxWPct} onChange={e=>setHeadMaxWPct(+e.target.value)}/>
+                </div>
+                <div className="check-row">
+                  <input type="checkbox" checked={headShadow} onChange={e=>setHeadShadow(e.target.checked)}/>
+                  <span>Drop Shadow</span>
+                  {headShadow && <input type="color" value={headShadowColor} onChange={e=>setHeadShadowColor(e.target.value)} style={{marginLeft:"auto",width:22,height:22}}/>}
+                </div>
+                {headShadow && <div className="field">
+                  <div className="field-label"><span>Blur</span><span className="val">{headShadowBlur}</span></div>
+                  <input type="range" min={0} max={30} value={headShadowBlur} onChange={e=>setHeadShadowBlur(+e.target.value)}/>
+                </div>}
+              </div>
+
+              {/* Subhead style */}
+              <div className="section">
+                <div className="section-title">Subhead Style</div>
+                <div className="field">
+                  <div className="field-label"><span>Size</span><span className="val">{subSize}px</span></div>
+                  <input type="range" min={8} max={80} value={subSize} onChange={e=>setSubSize(+e.target.value)}/>
+                </div>
+                <div className="inline-row" style={{marginBottom:8}}>
+                  <span style={{fontSize:10,color:"var(--t3)"}}>Color</span>
+                  <input type="color" value={subColor} onChange={e=>setSubColor(e.target.value)}/>
+                </div>
+                <div className="toggle-row" style={{marginBottom:8}}>
+                  <button className={`btn ${subBold?"active":""}`} onClick={()=>setSubBold(!subBold)}>Bold</button>
+                </div>
+                <div className="field">
+                  <div className="field-label"><span>Letter Spacing</span><span className="val">{subLetterSp}</span></div>
+                  <input type="range" min={0} max={20} value={subLetterSp} onChange={e=>setSubLetterSp(+e.target.value)}/>
+                </div>
+              </div>
+            </>}
+
+            {/* ═══ CONTENT TAB ═════════════════════ */}
+            {tab==="content" && <>
+              {/* Batch toggle */}
+              <div className="section">
+                <div className="section-title">Mode</div>
+                <div className="toggle-row">
+                  <button className={`btn ${!batchMode?"active":""}`} onClick={()=>setBatchMode(false)}>Single</button>
+                  <button className={`btn ${batchMode?"active":""}`} onClick={()=>setBatchMode(true)}>Batch</button>
+                </div>
+              </div>
+
+              {/* Images */}
+              <div className="section">
+                <div className="section-title">
+                  {batchMode ? `Images (${images.length})` : "Image"}
+                </div>
+                <input ref={imgRef} type="file" accept="image/*" multiple={batchMode} style={{display:"none"}} onChange={handleImages}/>
+                <button className={`upload-zone ${images.length?"has-file":""}`} onClick={()=>imgRef.current.click()}>
+                  {images.length ? (batchMode ? `${images.length} image${images.length>1?"s":""} — click to add more` : "Replace image") : (batchMode ? "Upload images (multi-select)" : "Upload image")}
+                </button>
+                {images.length > 0 && (
+                  <div style={{marginTop:6,display:"flex",gap:4,flexWrap:"wrap"}}>
+                    {images.map((img,i)=>(
+                      <div key={img.id} style={{position:"relative",cursor:"pointer"}} onClick={()=>setActiveImgIdx(i)}>
+                        <img src={img.url} style={{width:48,height:48,objectFit:"cover",borderRadius:4,border:activeImgIdx===i?"2px solid var(--t0)":"1px solid var(--border)",opacity:activeImgIdx===i?1:.5}}/>
+                        {batchMode && <button onClick={e=>{e.stopPropagation();removeImage(i);}} style={{position:"absolute",top:-4,right:-4,width:14,height:14,borderRadius:"50%",background:"var(--bg-0)",border:"1px solid var(--border)",color:"var(--t3)",fontSize:8,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",lineHeight:1}}>×</button>}
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {images.length > 0 && <div className="field" style={{marginTop:8}}>
+                  <div className="field-label"><span>Position X</span><span className="val">{imgPos.x}%</span></div>
+                  <input type="range" min={-100} max={100} value={imgPos.x} onChange={e=>setImgPos(p=>({...p,x:+e.target.value}))}/>
+                </div>}
+                {images.length > 0 && <div className="field">
+                  <div className="field-label"><span>Position Y</span><span className="val">{imgPos.y}%</span></div>
+                  <input type="range" min={-100} max={100} value={imgPos.y} onChange={e=>setImgPos(p=>({...p,y:+e.target.value}))}/>
+                </div>}
+              </div>
+
+              {/* Headlines */}
+              <div className="section">
+                <div className="section-title">
+                  {batchMode ? `Headlines (${headlines.length})` : "Headline"}
+                </div>
+                {batchMode && <>
+                  <input ref={csvRef} type="file" accept=".csv,.tsv,.txt" style={{display:"none"}} onChange={handleCSV}/>
+                  <button className="upload-zone" onClick={()=>csvRef.current.click()} style={{marginBottom:8}}>
+                    Upload CSV (columns: headline, subheadline)
+                  </button>
+                </>}
+                {!batchMode ? (
+                  <>
+                    <textarea value={activeHdl.headline} onChange={e=>{
+                      const v=e.target.value;
+                      setHeadlines(prev=>{const c=[...prev];c[activeHdlIdx]={...c[activeHdlIdx],headline:v};return c;});
+                    }} rows={2} placeholder="Headline" style={{marginBottom:6}}/>
+                    <textarea value={activeHdl.subheadline} onChange={e=>{
+                      const v=e.target.value;
+                      setHeadlines(prev=>{const c=[...prev];c[activeHdlIdx]={...c[activeHdlIdx],subheadline:v};return c;});
+                    }} rows={1} placeholder="Subheadline"/>
+                  </>
+                ) : (
+                  <div style={{maxHeight:200,overflowY:"auto",border:"1px solid var(--border)",borderRadius:"var(--r)"}}>
+                    {headlines.map((h,i) => (
+                      <div key={h.id} onClick={()=>setActiveHdlIdx(i)}
+                        style={{padding:"8px 10px",borderBottom:"1px solid var(--border)",cursor:"pointer",
+                          background:activeHdlIdx===i?"var(--accent-s)":"transparent"}}>
+                        <div style={{fontSize:11,color:"var(--t1)",fontWeight:500}}>{h.headline || "—"}</div>
+                        <div style={{fontSize:9,color:"var(--t4)",fontFamily:"var(--mono)",marginTop:2}}>{h.subheadline || "—"}</div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {batchMode && (
+                  <button className="btn-ghost" style={{marginTop:6}} onClick={()=>{
+                    setHeadlines(prev=>[...prev,{id:Date.now(),headline:"NEW HEADLINE",subheadline:"Subheadline"}]);
+                  }}>+ Add headline manually</button>
+                )}
+              </div>
+            </>}
+
+            {/* ═══ EXPORT TAB ══════════════════════ */}
+            {tab==="export" && <>
+              <div className="section">
+                <div className="section-title">Formats</div>
+                {PRESETS.map(p=>(
+                  <div key={p.id} className={`format-card ${selectedFmts.includes(p.id)?"selected":""}`} onClick={()=>toggleFmt(p.id)}>
+                    <input type="checkbox" checked={selectedFmts.includes(p.id)} onChange={()=>toggleFmt(p.id)}/>
+                    <div style={{flex:1}}>
+                      <div className="name">{p.label}</div>
+                      <div className="dims">{p.w}×{p.h} — {p.ratio}</div>
+                    </div>
+                    <button className="btn-ghost" onClick={e=>{e.stopPropagation();setPreview(p.id);}}>Preview</button>
+                  </div>
+                ))}
+                <div className="inline-row" style={{marginTop:8,gap:12}}>
+                  <button className="btn-ghost" onClick={()=>setSelectedFmts(PRESETS.map(p=>p.id))}>Select all</button>
+                  <button className="btn-ghost" onClick={()=>setSelectedFmts([])}>Clear</button>
+                </div>
+              </div>
+
+              <div className="section">
+                <div className="section-title">Download</div>
+                {selectedFmts.length === 0 ? (
+                  <div style={{fontSize:11,color:"var(--t4)"}}>No formats selected</div>
+                ) : (
+                  selectedFmts.map(id=>{
+                    const p=PRESETS.find(x=>x.id===id);
+                    return (
+                      <div key={id} className="export-card">
+                        <div><div className="name">{p.label}</div><div className="dims">{p.w}×{p.h}</div></div>
+                        <button className="btn" onClick={()=>exportSingleFormat(id)}>PNG</button>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+
+              {selectedFmts.length > 0 && (
+                <button className="btn-primary" style={{width:"100%"}} onClick={exportAll} disabled={exporting}>
+                  {exporting ? `Exporting… ${exportProgress}%` : (batchMode ? `Batch Export (${totalCombos} × ${selectedFmts.length})` : `Download ${selectedFmts.length} format${selectedFmts.length>1?"s":""}`)}
+                </button>
+              )}
+              {exporting && <div className="progress-bar"><div className="fill" style={{width:exportProgress+"%"}}/></div>}
+            </>}
+          </div>
+        </aside>
+
+        {/* ═══ CANVAS AREA ═══════════════════════ */}
+        <main className="canvas-area">
+          {/* Combo navigator (batch) */}
+          {batchMode && (images.length > 1 || headlines.length > 1) && (
+            <div style={{display:"flex",gap:8,marginBottom:12,flexWrap:"wrap",justifyContent:"center"}}>
+              {images.length > 1 && (
+                <div className="combo-nav">
+                  <button onClick={prevImg}>‹</button>
+                  <span className="label">Image {activeImgIdx+1}/{images.length}</span>
+                  <button onClick={nextImg}>›</button>
+                </div>
+              )}
+              {headlines.length > 1 && (
+                <div className="combo-nav">
+                  <button onClick={prevHdl}>‹</button>
+                  <span className="label">Headline {activeHdlIdx+1}/{headlines.length}</span>
+                  <button onClick={nextHdl}>›</button>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Format pills */}
+          <div className="format-pills">
+            {selectedFmts.map(id=>{
+              const p=PRESETS.find(x=>x.id===id);
+              return <button key={id} className={`pill ${preview===id?"active":""}`} onClick={()=>setPreview(id)}>{p.label}</button>;
+            })}
+          </div>
+
+          <div className="canvas-meta">{presetObj.label} — {presetObj.w}×{presetObj.h} — {presetObj.ratio}</div>
+          <div className="canvas-wrap">
+            <canvas ref={canvasRef}/>
+          </div>
+        </main>
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>
